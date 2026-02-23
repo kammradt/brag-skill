@@ -729,6 +729,70 @@ Generates stakeholder-facing product announcements following the the product upd
 
 Same template but condensed — shorter descriptions, skip "How It Works" and "What's Next". One combined post for all features instead of separate ones.
 
+### Post-Report: Auto-Suggest Impact & Value Updates
+
+After generating a NARRATIVE or NARRATIVE SHORT report (not LOG or ANNOUNCE), check if any deliverables should be saved to the impact or developer value documents.
+
+**Skip this entire section if the report mode is LOG or ANNOUNCE.**
+
+#### Impact Suggestions
+
+1. Determine the skill directory:
+
+```bash
+SKILL_DIR="$HOME/.claude/skills/brag"
+if [[ -L "$SKILL_DIR" ]]; then
+  SKILL_DIR="$(readlink "$SKILL_DIR")"
+fi
+IMPACT_PATH="$SKILL_DIR/impact.md"
+VALUE_PATH="$SKILL_DIR/developer-value.md"
+```
+
+2. Review the deliverables from the "Shipped" and "Invested in the Future" sections of the generated report.
+
+3. A deliverable is considered **significant** if it meets ANY of these criteria:
+   - 3 or more merged PRs in the cluster
+   - 5 or more commits in the cluster
+   - Has an associated Sentry issue with 50+ users affected
+   - Spans work across 3+ days
+
+4. For each significant deliverable, read `$IMPACT_PATH` (if it exists) and check if a similar entry already exists (matching title keywords). If it already exists, skip it.
+
+5. If there are new significant deliverables, use AskUserQuestion to ask:
+
+   "These deliverables look significant enough for your impact document. Which would you like to save?" with multiSelect options listing each deliverable title. Include a "None" option.
+
+6. For each selected deliverable, pre-fill values from the report data:
+   - **Title**: cluster/deliverable title from Step 3
+   - **When**: START_DATE — END_DATE from the report
+   - **Metrics**: PR additions/deletions totals, Sentry user impact if available
+   - **Links**: all PR, Asana, and Sentry links from the cluster
+   - **Description**: the impact statement from Step 3 clustering
+
+7. Show the pre-filled entry and ask: "Does this look right, or would you like to edit it?" with options:
+   - "Looks good, save it"
+   - "Let me edit it" → re-prompt for each field
+   - "Skip this one"
+
+8. Append confirmed entries to `$IMPACT_PATH` following the format from Step 0.6. Update `last_updated`.
+
+#### Developer Value Suggestions
+
+1. Read `$VALUE_PATH` (if it exists) and extract the list of domain names (H2 headings).
+
+2. Look at the deliverables from the report. For each one, infer the domain area from:
+   - Asana project name
+   - PR title keywords
+   - File paths changed (if available from commit data)
+
+3. If a deliverable's domain does not match any existing domain in `$VALUE_PATH`, and the deliverable is significant (same criteria as above), ask:
+
+   "Your work on '{deliverable title}' seems to be in a new area. Would you like to add it to your developer value document?" with options:
+   - "Yes, add it" → prompt for domain name and summary (pre-fill domain from inferred area)
+   - "No, skip"
+
+4. Append confirmed domains to `$VALUE_PATH` following the format from Step 0.7. Update `last_updated`.
+
 ## Step 5: Slack Posting (Optional)
 
 Only if the user included `--slack #channel` or `--slack @user` or explicitly asks to post to Slack:
