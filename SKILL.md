@@ -47,12 +47,22 @@ Slack:
 Setup:
   /brag setup                            Configure data sources and preferences
 
+Impact & Value:
+  /brag impact                         View your long-term impact document
+  /brag impact add                     Add an entry to your impact document
+  /brag value                          View your developer value document
+  /brag value add                      Add a domain to your developer value doc
+
 Examples:
   /brag last_week                        Narrative report for last week
   /brag 14d --short                      Quick summary of last 2 weeks
   /brag last_week --log                  Technical changelog
   /brag last_week --announce             Product update draft
   /brag week --short --slack #standup    Short report posted to Slack
+  /brag impact                         View long-term impact document
+  /brag impact add                     Add a new impact entry
+  /brag value                          View developer value document
+  /brag value add                      Add a new domain
 
 Data sources: GitHub PRs, git commits, Asana tasks, Claude Code sessions,
               Slack activity, Sentry issues, PR review depth
