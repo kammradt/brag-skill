@@ -1,9 +1,9 @@
 ---
 name: brag
-description: "Generate developer accomplishment report from GitHub PRs, git commits, Claude Code sessions, Asana tasks, Slack activity, Sentry issues, and PR review depth. Supports narrative, technical log, and product announcement modes. Use for standups, check-ins, brag docs, promo packets, or product updates."
+description: "Generate developer accomplishment report from GitHub PRs, git commits, Claude Code sessions, Asana tasks, Slack activity, Sentry issues, and PR review depth. Supports narrative, technical log, and product announcement modes. Track long-term impact and developer domain expertise. Use for standups, check-ins, brag docs, promo packets, or product updates."
 user-invocable: true
 allowed-tools: Bash, Read, Write, Grep, Glob, ToolSearch, AskUserQuestion
-argument-hint: "[setup | today | yesterday | week | last_week | 7d | 14d | YYYY-MM-DD..YYYY-MM-DD] [--log | --announce] [--short] [--slack #channel]"
+argument-hint: "[setup | impact | impact add | value | value add | today | yesterday | week | last_week | 7d | 14d | YYYY-MM-DD..YYYY-MM-DD] [--log | --announce] [--short] [--slack #channel]"
 author: "Vinicius Kammradt"
 author-url: "https://github.com/kammradt"
 ---
