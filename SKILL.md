@@ -163,6 +163,100 @@ Run /brag last_week to try it out!
 
 **Then stop — do NOT proceed to generate a report.**
 
+## Step 0.6: Impact Document (`/brag impact` and `/brag impact add`)
+
+If `$ARGUMENTS` starts with `impact`, handle it here and stop — do NOT continue to report generation.
+
+### Determine Skill Directory
+
+```bash
+SKILL_DIR="$HOME/.claude/skills/brag"
+if [[ -L "$SKILL_DIR" ]]; then
+  SKILL_DIR="$(readlink "$SKILL_DIR")"
+fi
+IMPACT_PATH="$SKILL_DIR/impact.md"
+```
+
+### `/brag impact` — View Impact Document
+
+If `$ARGUMENTS` is exactly `impact`:
+
+1. Read `$IMPACT_PATH` using the Read tool
+2. If the file exists, display its contents rendered as Markdown
+3. If the file does not exist, display:
+
+```
+No impact document yet.
+
+Run /brag impact add to create your first entry, or generate a narrative report
+and you'll be prompted to save significant deliverables automatically.
+```
+
+**Then stop.**
+
+### `/brag impact add` — Add Impact Entry
+
+If `$ARGUMENTS` is `impact add`:
+
+1. Read `$IMPACT_PATH` if it exists (to append to it). If it doesn't exist, prepare to create it with the initial frontmatter:
+
+```markdown
+---
+version: 1
+last_updated: {TODAY}
+---
+```
+
+2. Ask the user for each field using AskUserQuestion, one at a time:
+
+   **Question 1 — Title:**
+   "What's the name of the feature or project?" (open-ended)
+
+   **Question 2 — When:**
+   "When did you work on this?" with options:
+   - "This month" → `{current YYYY-MM}`
+   - "Last month" → `{previous YYYY-MM}`
+   - "A date range" → prompt for `YYYY-MM — YYYY-MM` or similar
+
+   **Question 3 — Metrics:**
+   "Any quantifiable impact? (e.g. 'Reduced latency by 40%', '200+ daily workflows affected')"
+   with options:
+   - "I have metrics" → prompt for the metrics text
+   - "Skip for now" → leave Metrics line empty
+
+   **Question 4 — Links:**
+   "Any links to PRs, tasks, or docs?" with options:
+   - "I have links" → prompt for the links (Markdown format)
+   - "Skip for now" → leave Links line empty
+
+   **Question 5 — Description:**
+   "Describe the impact in 1-3 sentences. Focus on what changed for users or the team, not what code was written." (open-ended)
+
+3. Append the new entry to `$IMPACT_PATH`:
+
+```markdown
+
+---
+
+## {Title}
+
+**When:** {When}
+**Metrics:** {Metrics}
+**Links:** {Links}
+
+{Description}
+```
+
+4. Update the `last_updated` field in the YAML frontmatter to today's date.
+
+5. Display the new entry and confirm: "Added to your impact document."
+
+**Then stop.**
+
+### Auto-Add from Report (used by Step 4)
+
+When called programmatically from Step 4's auto-suggest flow (not directly by the user), the same append logic is used but with pre-filled values from the report deliverable. The user confirms or edits each field before saving.
+
 ## Step 1: Parse Arguments and Compute Date Range
 
 ### Load Config (if exists)
