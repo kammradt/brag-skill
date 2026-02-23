@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "defaults": {
+    "mode": "narrative",
+    "time_range": "last_week",
+    "short": false
+  },
+  "sources": {
+    "github": { "enabled": true, "verified": true },
+    "git": { "enabled": true, "author_name": "Your Name" },
+    "asana": { "enabled": true, "workspace_gid": "12345" },
+    "slack": {
+      "enabled": true,
+      "user_id": "U12345",
+      "channels": { "product_updates": "#product-updates" }
+    },
+    "sentry": { "enabled": true, "organization": "org-slug", "project": "project-slug" },
+    "claude_sessions": { "enabled": true }
+  }
+}
