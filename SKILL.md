@@ -257,6 +257,72 @@ last_updated: {TODAY}
 
 When called programmatically from Step 4's auto-suggest flow (not directly by the user), the same append logic is used but with pre-filled values from the report deliverable. The user confirms or edits each field before saving.
 
+## Step 0.7: Developer Value (`/brag value` and `/brag value add`)
+
+If `$ARGUMENTS` starts with `value`, handle it here and stop — do NOT continue to report generation.
+
+### Determine Skill Directory
+
+```bash
+SKILL_DIR="$HOME/.claude/skills/brag"
+if [[ -L "$SKILL_DIR" ]]; then
+  SKILL_DIR="$(readlink "$SKILL_DIR")"
+fi
+VALUE_PATH="$SKILL_DIR/developer-value.md"
+```
+
+### `/brag value` — View Developer Value Document
+
+If `$ARGUMENTS` is exactly `value`:
+
+1. Read `$VALUE_PATH` using the Read tool
+2. If the file exists, display its contents rendered as Markdown
+3. If the file does not exist, display:
+
+```
+No developer value document yet.
+
+Run /brag value add to define your first domain of expertise.
+```
+
+**Then stop.**
+
+### `/brag value add` — Add Domain
+
+If `$ARGUMENTS` is `value add`:
+
+1. Read `$VALUE_PATH` if it exists (to append to it). If it doesn't exist, prepare to create it with the initial frontmatter:
+
+```markdown
+---
+version: 1
+last_updated: {TODAY}
+---
+```
+
+2. Ask the user for each field using AskUserQuestion:
+
+   **Question 1 — Domain name:**
+   "What domain or area of expertise do you want to add?" (open-ended, e.g. "Data Ingestion", "Authentication", "Developer Experience")
+
+   **Question 2 — Summary:**
+   "Describe your role and expertise in this domain in 1-3 sentences." (open-ended)
+
+3. Append the new entry to `$VALUE_PATH`:
+
+```markdown
+
+## {Domain Name}
+
+{Summary}
+```
+
+4. Update the `last_updated` field in the YAML frontmatter to today's date.
+
+5. Display the new entry and confirm: "Added to your developer value document."
+
+**Then stop.**
+
 ## Step 1: Parse Arguments and Compute Date Range
 
 ### Load Config (if exists)
