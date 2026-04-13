@@ -1,10 +1,11 @@
 ---
 name: brag
-description: "Generate developer accomplishment report from GitHub PRs, git commits, Claude Code sessions, Asana tasks, Slack activity, Sentry issues, and PR review depth. Supports narrative, technical log, and product announcement modes. Use for standups, check-ins, brag docs, promo packets, or product updates."
-disable-model-invocation: true
+description: "Generate developer accomplishment report from GitHub PRs, git commits, Claude Code sessions, Asana tasks, Slack activity, Sentry issues, and PR review depth. Supports narrative, technical log, and product announcement modes. Track long-term impact and developer domain expertise. Use for standups, check-ins, brag docs, promo packets, or product updates."
 user-invocable: true
 allowed-tools: Bash(gh *), Bash(git log *), Bash(git config *), Bash(date *), Read, Write, Grep, Glob, ToolSearch, AskUserQuestion
-argument-hint: "[setup | today | yesterday | week | last_week | 7d | 14d | YYYY-MM-DD..YYYY-MM-DD] [--log | --announce] [--short] [--slack #channel]"
+argument-hint: "[setup | impact | impact add | value | value add | today | yesterday | week | last_week | 7d | 14d | YYYY-MM-DD..YYYY-MM-DD] [--log | --announce] [--short] [--slack #channel]"
+author: "Vinicius Kammradt"
+author-url: "https://github.com/kammradt"
 ---
 
 # /brag — Developer Accomplishment Report
@@ -53,12 +54,22 @@ Slack:
 Setup:
   /brag setup                            Configure data sources and preferences
 
+Impact & Value:
+  /brag impact                         View your long-term impact document
+  /brag impact add                     Add an entry to your impact document
+  /brag value                          View your developer value document
+  /brag value add                      Add a domain to your developer value doc
+
 Examples:
   /brag last_week                        Narrative report for last week
   /brag 14d --short                      Quick summary of last 2 weeks
   /brag last_week --log                  Technical changelog
   /brag last_week --announce             Product update draft
   /brag week --short --slack #standup    Short report posted to Slack
+  /brag impact                         View long-term impact document
+  /brag impact add                     Add a new impact entry
+  /brag value                          View developer value document
+  /brag value add                      Add a new domain
 
 Data sources: GitHub PRs, git commits, Asana tasks, Claude Code sessions,
               Slack activity, Sentry issues, PR review depth
@@ -106,6 +117,166 @@ Then ask source-specific questions using AskUserQuestion:
 Determine the skill directory (resolve symlinks). Write `config.json` — see [config.json.example](config.json.example) for the schema.
 
 Set `"enabled": false` for undetected sources. After writing, display a summary and stop — do NOT proceed to generate a report.
+
+## Step 0.6: Impact Document (`/brag impact` and `/brag impact add`)
+
+If `$ARGUMENTS` starts with `impact`, handle it here and stop — do NOT continue to report generation.
+
+### Determine Skill Directory
+
+```bash
+SKILL_DIR="$HOME/.claude/skills/brag"
+if [[ -L "$SKILL_DIR" ]]; then
+  SKILL_DIR="$(readlink "$SKILL_DIR")"
+fi
+IMPACT_PATH="$SKILL_DIR/impact.md"
+```
+
+### `/brag impact` — View Impact Document
+
+If `$ARGUMENTS` is exactly `impact`:
+
+1. Read `$IMPACT_PATH` using the Read tool
+2. If the file exists, display its contents rendered as Markdown
+3. If the file does not exist, display:
+
+```
+No impact document yet.
+
+Run /brag impact add to create your first entry, or generate a narrative report
+and you'll be prompted to save significant deliverables automatically.
+```
+
+**Then stop.**
+
+### `/brag impact add` — Add Impact Entry
+
+If `$ARGUMENTS` is `impact add`:
+
+1. Read `$IMPACT_PATH` if it exists (to append to it). If it doesn't exist, prepare to create it with the initial frontmatter:
+
+```markdown
+---
+version: 1
+last_updated: {TODAY}
+---
+```
+
+2. Ask the user for each field using AskUserQuestion, one at a time:
+
+   **Question 1 — Title:**
+   "What's the name of the feature or project?" (open-ended)
+
+   **Question 2 — When:**
+   "When did you work on this?" with options:
+   - "This month" → `{current YYYY-MM}`
+   - "Last month" → `{previous YYYY-MM}`
+   - "A date range" → prompt for `YYYY-MM — YYYY-MM` or similar
+
+   **Question 3 — Metrics:**
+   "Any quantifiable impact? (e.g. 'Reduced latency by 40%', '200+ daily workflows affected')"
+   with options:
+   - "I have metrics" → prompt for the metrics text
+   - "Skip for now" → leave Metrics line empty
+
+   **Question 4 — Links:**
+   "Any links to PRs, tasks, or docs?" with options:
+   - "I have links" → prompt for the links (Markdown format)
+   - "Skip for now" → leave Links line empty
+
+   **Question 5 — Description:**
+   "Describe the impact in 1-3 sentences. Focus on what changed for users or the team, not what code was written." (open-ended)
+
+3. Append the new entry to `$IMPACT_PATH`:
+
+```markdown
+
+---
+
+## {Title}
+
+**When:** {When}
+**Metrics:** {Metrics}
+**Links:** {Links}
+
+{Description}
+```
+
+4. Update the `last_updated` field in the YAML frontmatter to today's date.
+
+5. Display the new entry and confirm: "Added to your impact document."
+
+**Then stop.**
+
+### Auto-Add from Report (used by Step 4)
+
+When called programmatically from Step 4's auto-suggest flow (not directly by the user), the same append logic is used but with pre-filled values from the report deliverable. The user confirms or edits each field before saving.
+
+## Step 0.7: Developer Value (`/brag value` and `/brag value add`)
+
+If `$ARGUMENTS` starts with `value`, handle it here and stop — do NOT continue to report generation.
+
+### Determine Skill Directory
+
+```bash
+SKILL_DIR="$HOME/.claude/skills/brag"
+if [[ -L "$SKILL_DIR" ]]; then
+  SKILL_DIR="$(readlink "$SKILL_DIR")"
+fi
+VALUE_PATH="$SKILL_DIR/developer-value.md"
+```
+
+### `/brag value` — View Developer Value Document
+
+If `$ARGUMENTS` is exactly `value`:
+
+1. Read `$VALUE_PATH` using the Read tool
+2. If the file exists, display its contents rendered as Markdown
+3. If the file does not exist, display:
+
+```
+No developer value document yet.
+
+Run /brag value add to define your first domain of expertise.
+```
+
+**Then stop.**
+
+### `/brag value add` — Add Domain
+
+If `$ARGUMENTS` is `value add`:
+
+1. Read `$VALUE_PATH` if it exists (to append to it). If it doesn't exist, prepare to create it with the initial frontmatter:
+
+```markdown
+---
+version: 1
+last_updated: {TODAY}
+---
+```
+
+2. Ask the user for each field using AskUserQuestion:
+
+   **Question 1 — Domain name:**
+   "What domain or area of expertise do you want to add?" (open-ended, e.g. "Data Ingestion", "Authentication", "Developer Experience")
+
+   **Question 2 — Summary:**
+   "Describe your role and expertise in this domain in 1-3 sentences." (open-ended)
+
+3. Append the new entry to `$VALUE_PATH`:
+
+```markdown
+
+## {Domain Name}
+
+{Summary}
+```
+
+4. Update the `last_updated` field in the YAML frontmatter to today's date.
+
+5. Display the new entry and confirm: "Added to your developer value document."
+
+**Then stop.**
 
 ## Step 1: Parse Arguments and Compute Date Range
 
@@ -168,6 +339,70 @@ Use the appropriate template based on mode and length:
 - **NARRATIVE** (default): see [templates/narrative.md](templates/narrative.md)
 - **LOG** (`--log`): see [templates/log.md](templates/log.md)
 - **ANNOUNCE** (`--announce`): see [templates/announce.md](templates/announce.md)
+
+### Post-Report: Auto-Suggest Impact & Value Updates
+
+After generating a NARRATIVE or NARRATIVE SHORT report (not LOG or ANNOUNCE), check if any deliverables should be saved to the impact or developer value documents.
+
+**Skip this entire section if the report mode is LOG or ANNOUNCE.**
+
+#### Impact Suggestions
+
+1. Determine the skill directory:
+
+```bash
+SKILL_DIR="$HOME/.claude/skills/brag"
+if [[ -L "$SKILL_DIR" ]]; then
+  SKILL_DIR="$(readlink "$SKILL_DIR")"
+fi
+IMPACT_PATH="$SKILL_DIR/impact.md"
+VALUE_PATH="$SKILL_DIR/developer-value.md"
+```
+
+2. Review the deliverables from the "Shipped" and "Invested in the Future" sections of the generated report.
+
+3. A deliverable is considered **significant** if it meets ANY of these criteria:
+   - 3 or more merged PRs in the cluster
+   - 5 or more commits in the cluster
+   - Has an associated Sentry issue with 50+ users affected
+   - Spans work across 3+ days
+
+4. For each significant deliverable, read `$IMPACT_PATH` (if it exists) and check if a similar entry already exists (matching title keywords). If it already exists, skip it.
+
+5. If there are new significant deliverables, use AskUserQuestion to ask:
+
+   "These deliverables look significant enough for your impact document. Which would you like to save?" with multiSelect options listing each deliverable title. Include a "None" option.
+
+6. For each selected deliverable, pre-fill values from the report data:
+   - **Title**: cluster/deliverable title from Step 3
+   - **When**: START_DATE — END_DATE from the report
+   - **Metrics**: PR additions/deletions totals, Sentry user impact if available
+   - **Links**: all PR, Asana, and Sentry links from the cluster
+   - **Description**: the impact statement from Step 3 clustering
+
+7. Show the pre-filled entry and ask: "Does this look right, or would you like to edit it?" with options:
+   - "Looks good, save it"
+   - "Let me edit it" → re-prompt for each field
+   - "Skip this one"
+
+8. Append confirmed entries to `$IMPACT_PATH` following the format from Step 0.6. Update `last_updated`.
+
+#### Developer Value Suggestions
+
+1. Read `$VALUE_PATH` (if it exists) and extract the list of domain names (H2 headings).
+
+2. Look at the deliverables from the report. For each one, infer the domain area from:
+   - Asana project name
+   - PR title keywords
+   - File paths changed (if available from commit data)
+
+3. If a deliverable's domain does not match any existing domain in `$VALUE_PATH`, and the deliverable is significant (same criteria as above), ask:
+
+   "Your work on '{deliverable title}' seems to be in a new area. Would you like to add it to your developer value document?" with options:
+   - "Yes, add it" → prompt for domain name and summary (pre-fill domain from inferred area)
+   - "No, skip"
+
+4. Append confirmed domains to `$VALUE_PATH` following the format from Step 0.7. Update `last_updated`.
 
 ## Step 5: Slack Posting (Optional)
 
