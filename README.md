@@ -63,6 +63,8 @@ Setup is optional — the skill works without it using auto-detection, but confi
 ```
 /brag <time range> [--log | --announce] [--short] [--slack #channel]
 /brag setup
+/brag impact [add]
+/brag value [add]
 ```
 
 ### Time ranges
@@ -85,6 +87,17 @@ Setup is optional — the skill works without it using auto-detection, but confi
 | `--log` | **Technical changelog** — organized by data source |
 | `--announce` | **Product announcement** — stakeholder-facing format |
 
+### Impact & Value Tracking
+
+| Command | Description |
+|---|---|
+| `/brag impact` | View your long-term impact document |
+| `/brag impact add` | Add an entry (feature, project, or deliverable) |
+| `/brag value` | View your developer value document |
+| `/brag value add` | Add a domain of expertise |
+
+After generating a narrative report, the skill auto-suggests saving significant deliverables to your impact and value documents — useful for promo packets and annual reviews.
+
 ### Options
 
 | Flag | Effect |
@@ -102,6 +115,10 @@ Setup is optional — the skill works without it using auto-detection, but confi
 /brag last_week --log                  # Technical changelog
 /brag last_week --announce             # Product update draft
 /brag week --short --slack #standup    # Short report posted to Slack
+/brag impact                           # View your impact document
+/brag impact add                       # Add a new impact entry
+/brag value                            # View your developer value document
+/brag value add                        # Add a new domain of expertise
 ```
 
 ## How it works
@@ -112,6 +129,15 @@ Setup is optional — the skill works without it using auto-detection, but confi
 4. **Generates** a report with links, impact framing, and collapsed repetitive items
 
 MCP-dependent sources (Asana, Slack, Sentry) are optional — the skill works with just GitHub and git, and gets richer as you add MCP integrations.
+
+## Long-Term Tracking
+
+Beyond periodic reports, `/brag` can maintain two persistent documents for career growth:
+
+- **Impact document** (`impact.md`) — tracks significant features, projects, and deliverables with metrics and links. Ideal for promo packets and performance reviews.
+- **Developer value document** (`developer-value.md`) — captures your domains of expertise and institutional knowledge. Useful for demonstrating breadth and depth of contribution.
+
+Both documents are stored alongside your config and are gitignored by default (they contain personal data). After generating a narrative report, the skill auto-suggests saving significant deliverables to these documents based on PR count, commit volume, and Sentry impact.
 
 ## Author
 
